@@ -1,19 +1,20 @@
 import 'package:dash_kit_network/dash_kit_network.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
+import 'api_client_test.mocks.dart';
 import 'api_client_test_utils.dart';
-import 'mocks/mock_dio.dart';
-import 'mocks/mock_token_storage.dart';
 import 'test_components/test_api_client.dart';
 import 'test_components/test_refresh_tokens_delegate.dart';
 
+@GenerateMocks([TokenStorage, Dio])
 void main() {
-  Dio dio;
-  BaseOptions dioBaseOptions;
-  TestApiClient apiClient;
-  TestRefreshTokensDelegate delegate;
-  TokenStorage tokenStorage;
+  late Dio dio;
+  late BaseOptions dioBaseOptions;
+  late TestApiClient apiClient;
+  late TestRefreshTokensDelegate delegate;
+  late TokenStorage tokenStorage;
 
   setUp(() {
     dio = MockDio();
@@ -24,8 +25,8 @@ void main() {
   });
 
   test('No tokens exists', () async {
-    stubAccessToken(tokenStorage, null);
-    stubRefreshToken(tokenStorage, null);
+    stubAccessToken(tokenStorage, '');
+    stubRefreshToken(tokenStorage, '');
     stubDioOptions(dio, dioBaseOptions);
 
     apiClient = TestApiClient(dio, delegate);
@@ -50,6 +51,7 @@ void main() {
     final usersRequest = apiClient.get(
       path: 'users',
       isAuthorisedRequest: true,
+      responseMapper: (response) => response,
     );
 
     bool isRequestFailed = false;
@@ -63,7 +65,7 @@ void main() {
 
     verifyInOrder([
       dio.options,
-      userRequest(dio, accessToken: null),
+      userRequest(dio, accessToken: ''),
       refreshTokensRequest(dio),
     ]);
 
@@ -90,11 +92,11 @@ void main() {
     });
 
     final users = await apiClient.get(
-      path: 'users',
-      isAuthorisedRequest: true,
-    );
+        path: 'users',
+        isAuthorisedRequest: true,
+        responseMapper: (response) => response);
 
-    expect(users, ['John', 'Mary']);
+    expect(users.data, ['John', 'Mary']);
 
     verifyInOrder([
       dio.options,
@@ -126,6 +128,7 @@ void main() {
     final usersRequest = apiClient.get(
       path: 'users',
       isAuthorisedRequest: true,
+      responseMapper: (response) => response,
     );
 
     bool isRequestFailed = false;
@@ -188,11 +191,12 @@ void main() {
     final usersRequest = apiClient.get(
       path: 'users',
       isAuthorisedRequest: true,
+      responseMapper: (response) => response,
     );
 
     final users = await usersRequest;
 
-    expect(users, ['John', 'Mary']);
+    expect(users.data, ['John', 'Mary']);
 
     verifyInOrder([
       dio.options,
@@ -245,6 +249,7 @@ void main() {
     final usersRequest = apiClient.get(
       path: 'users',
       isAuthorisedRequest: true,
+      responseMapper: (response) => response,
     );
 
     try {
